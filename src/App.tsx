@@ -3,79 +3,151 @@ import Wrapper from './components/Wrapper'
 import Screen from './components/Screen'
 import ButtonBox from './components/ButtonBox'
 import Button from './components/Button'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 
-import { Calculator, roundToMaxDigits } from './calculatorClass'
+type CalcState = {
+    current: string
+    previous: string | null
+    operator: string | null
+}
 
-const buttonValues: Array<string[]> = [
+const btnValues = [
     ['C', '+-', '%', '/'],
-    ['7', '8', '9', 'X'],
-    ['4', '5', '6', '-'],
-    ['1', '2', '3', '+'],
-    ['0', '.', '='],
+    [7, 8, 9, 'X'],
+    [4, 5, 6, '-'],
+    [1, 2, 3, '+'],
+    [0, '.', '='],
 ]
-const updateDisplay = (
-    value: string | number,
-    display: string,
-    setDisplay: React.Dispatch<React.SetStateAction<string>>
-) => {
-    if (display.length < 13) {
-        const newValue = display === '0' ? value : `${display}${value}`
-        console.log(display, newValue)
-        setDisplay(newValue.toString())
+const roundToMaxDigits = (num: number, maxDigits = 12) => {
+    if (typeof num !== 'number' || isNaN(num)) {
+        return NaN
+    }
+
+    let str = num.toString()
+
+    if (str.replace(/[-.]/g, '').length <= maxDigits) {
+        return num
+    }
+
+    let availableDigits =
+        maxDigits - (num < 0 ? 1 : 0) - (num % 1 !== 0 ? 1 : 0)
+
+    let cutDigits = str.replace(/[-.]/g, '').length - availableDigits
+
+    if (num % 1 !== 0) {
+        return parseFloat(
+            num.toFixed(Math.max(0, str.split('.')[1].length - cutDigits))
+        )
+    } else {
+        return (
+            Math.round(num / Math.pow(10, cutDigits)) * Math.pow(10, cutDigits)
+        )
     }
 }
-function App() {
-    const [display, setDisplay] = useState('0')
-    const calculator = useRef(new Calculator())
 
-    const handleButtonClick = (value: string) => {
-        console.log('calculator', calculator)
-        if (['+', '-', 'X', '/'].includes(value as string)) {
-            calculator.current?.setOperator(value as string)
-            calculator.current?.setOperand(parseFloat(display))
-            calculator.current?.calculate()
-            setDisplay(calculator.current.total.toString())
-        } else if (value === '=') {
-            calculator.current.setOperand(parseFloat(display))
-            calculator.current?.calculate()
-            setDisplay(calculator.current.total.toString())
-        } else if (value === 'C') {
-            calculator.current.clear()
-            setDisplay('0')
-        } else if (value === '+-') {
-            const newDisplay = calculator.current?.invert(display).toString()
-            setDisplay(newDisplay)
-        } else if (value === '%') {
-            const newDisplay = calculator.current?.togglePercentSign(display)
-            setDisplay(newDisplay)
-        } else if (value === '.') {
-            const newDisplay = calculator.current?.setDecimal(display)
-            if (newDisplay) setDisplay(newDisplay)
-        } else {
-            setDisplay((prevDisplay) =>
-                prevDisplay === '0' ? value : prevDisplay + value
-            )
-           
+const App: React.FC = () => {
+    const [calc, setCalc] = useState<CalcState>({
+        current: '',
+        previous: null,
+        operator: null,
+    })
+
+    const handleNumber = (value: string) => {
+        if (calc.current.length < 15) {
+            setCalc({
+                ...calc,
+                current:
+                    calc.current === '0' ? value : `${calc.current}${value}`,
+            })
         }
     }
+    const handlePercent = () => {
+        if (!calc.current.includes('%')) {
+            const percent = (Number(calc.current) / 10).toString()
+            setCalc({ ...calc, current: percent })
+        }
+    }
+    const handleInvert = () => {
+        const currNum = Number(calc.current)
+        console.log('currNum', currNum)
+        const invertedNum = (-currNum).toString()
+        setCalc({ ...calc, current: invertedNum })
+    }
+    const handleOperator = (value: string) => {
+        setCalc({
+            previous: calc.current,
+            current: '',
+            operator: value,
+        })
+    }
+
+    const handleEquals = () => {
+        let result: number | string = 'Error' // Initialize to a default value
+        if (calc.previous && calc.current && calc.operator) {
+            const a = parseFloat(calc.previous)
+            const b = parseFloat(calc.current)
+
+            switch (calc.operator) {
+                case '+':
+                    result = a + b
+                    break
+                case '-':
+                    result = a - b
+                    break
+                case 'X':
+                    result = a * b
+                    break
+                case '/':
+                    if (b === 0) {
+                        result = "Can't divide by 0"
+                    } else {
+                        result = a / b
+                    }
+                    break
+                default:
+                    break
+            }
+        }
+        const roundedResult = roundToMaxDigits(Number(result))
+        setCalc({
+            previous: null,
+            current: result.toString(),
+            operator: null,
+        })
+    }
+
+    const handleReset = () => {
+        setCalc({ current: '', previous: null, operator: null })
+    }
+
     return (
-        <div className="h-screen pt-20 flex justify-center bg-neutral-200">
+        <div className="h-screen flex justify-center items-center bg-gradient-to-t from-amber-800">
             <Wrapper>
-                <Screen value={display} />
+                <Screen value={calc.current || calc.previous || '0'} />
                 <ButtonBox>
-                    {buttonValues.flat().map((btnValue, idx) => {
-                        return (
-                            <Button
-                                key={idx}
-                                value={btnValue}
-                                onClick={() => {
-                                    handleButtonClick(btnValue)
-                                }}
-                                isEquals={btnValue === '='}
-                            />
-                        )
-                    })}
+                    {btnValues.flat().map((btn, i) => (
+                        <Button
+                            key={i}
+                            value={btn}
+                            onClick={
+                                btn === 'C'
+                                    ? handleReset
+                                    : btn === '='
+                                    ? handleEquals
+                                    : btn === '+-'
+                                    ? handleInvert
+                                    : btn === '%'
+                                    ? handlePercent
+                                    : btn === '/' ||
+                                      btn === 'X' ||
+                                      btn === '-' ||
+                                      btn === '+'
+                                    ? () => handleOperator(btn.toString())
+                                    : () => handleNumber(btn.toString())
+                            }
+                            isEquals={btn === '='}
+                        />
+                    ))}
                 </ButtonBox>
             </Wrapper>
         </div>

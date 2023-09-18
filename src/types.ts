@@ -5,7 +5,7 @@ export type ChildrenProps = {
 }
 
 export type ScreenProps = {
-    value: number | string
+    value: string
 }
 
 export type ButtonProps = {
@@ -33,7 +33,7 @@ export type SignClickHandler = (
     calc: CalcState,
     setCalc: SetCalc
 ) => void
-export type DecimalClickHandler = (calc: CalcState, setCalc: SetCalc) => void
+export type CommaClickHandler = (calc: CalcState, setCalc: SetCalc) => void
 export type InvertClickHandler = (calc: CalcState, setCalc: SetCalc) => void
 export type PercentClickHandler = (calc: CalcState, setCalc: SetCalc) => void
 export type ResetClickHandler = (calc: CalcState, setCalc: SetCalc) => void
