@@ -14,26 +14,8 @@ export type ButtonProps = {
     isEquals: boolean
 }
 
-export interface CalcState {
-    sign: string
-    num: string
-    res: string
+export type CalcState = {
+    current: string
+    previous: string | null
+    operator: string | null
 }
-
-export type SetCalc = React.Dispatch<React.SetStateAction<CalcState>>
-
-export type NumClickHandler = (
-    e: React.MouseEvent<HTMLButtonElement>,
-    calc: CalcState,
-    setCalc: SetCalc
-) => void
-export type EqualsClickHandler = (calc: CalcState, setCalc: SetCalc) => void
-export type SignClickHandler = (
-    e: React.MouseEvent<HTMLButtonElement>,
-    calc: CalcState,
-    setCalc: SetCalc
-) => void
-export type CommaClickHandler = (calc: CalcState, setCalc: SetCalc) => void
-export type InvertClickHandler = (calc: CalcState, setCalc: SetCalc) => void
-export type PercentClickHandler = (calc: CalcState, setCalc: SetCalc) => void
-export type ResetClickHandler = (calc: CalcState, setCalc: SetCalc) => void
