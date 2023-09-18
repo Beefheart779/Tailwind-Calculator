@@ -18,7 +18,8 @@ const btnValues = [
     [1, 2, 3, '+'],
     [0, '.', '='],
 ]
-const roundToMaxDigits = (num: number, maxDigits = 12) => {
+const roundToMaxDigits = (num: number, maxDigits = 10) => {
+    console.log('called')
     if (typeof num !== 'number' || isNaN(num)) {
         return NaN
     }
@@ -73,6 +74,11 @@ const App: React.FC = () => {
         const invertedNum = (-currNum).toString()
         setCalc({ ...calc, current: invertedNum })
     }
+    const handleDecimal = () => {
+        if (!calc.current.includes('.')) {
+            setCalc({ ...calc, current: `${calc.current}.` })
+        }
+    }
     const handleOperator = (value: string) => {
         setCalc({
             previous: calc.current,
@@ -82,7 +88,7 @@ const App: React.FC = () => {
     }
 
     const handleEquals = () => {
-        let result: number | string = 'Error' // Initialize to a default value
+        let result: number | string = calc.current
         if (calc.previous && calc.current && calc.operator) {
             const a = parseFloat(calc.previous)
             const b = parseFloat(calc.current)
@@ -111,7 +117,7 @@ const App: React.FC = () => {
         const roundedResult = roundToMaxDigits(Number(result))
         setCalc({
             previous: null,
-            current: result.toString(),
+            current: roundedResult.toString(),
             operator: null,
         })
     }
@@ -138,6 +144,8 @@ const App: React.FC = () => {
                                     ? handleInvert
                                     : btn === '%'
                                     ? handlePercent
+                                    : btn === '.'
+                                    ? handleDecimal
                                     : btn === '/' ||
                                       btn === 'X' ||
                                       btn === '-' ||
